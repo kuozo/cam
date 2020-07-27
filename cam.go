@@ -79,14 +79,14 @@ func (Cam) splitPrefix(data string) []string {
 
 func (c Cam) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
 
+	// make sure the url filter
 	url := r.URL.String()
 	if !include(url, c.PrefixURL) {
 		return next.ServeHTTP(w, r)
 	}
 	token := r.Header.Get("token")
 	if token == "" {
-		w.WriteHeader(401)
-		w.Write([]byte("token must value"))
+		makeErrResp(w, 401, "token must value")
 		return nil
 	}
 	return next.ServeHTTP(w, r)
