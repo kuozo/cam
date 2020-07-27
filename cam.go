@@ -18,7 +18,7 @@ func init() {
 
 // Cam .
 type Cam struct {
-	VerifyURL string   `json:"verify_url,omitempty"`
+	AuthURL   string   `json:"auth_url,omitempty"`
 	PrefixURL []string `json:"prefix_url,omitempty"`
 	logger    *zap.Logger
 }
@@ -57,16 +57,16 @@ func (c *Cam) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 		switch parameter {
 		case "prefix_url":
 			if len(args) != 1 {
-				return d.Err("Invalid prefix url.")
+				return d.Err("invalid prefix url")
 			}
 			c.PrefixURL = c.splitPrefix(args[0])
 		case "verify_url":
 			if len(args) != 1 {
-				return d.Err("Invalid verify url")
+				return d.Err("invalid verify url")
 			}
-			c.VerifyURL = args[0]
+			c.AuthURL = args[0]
 		default:
-			d.Err("Unknow guard parameter: " + parameter)
+			d.Err("Unknow cam parameter: " + parameter)
 		}
 
 	}
@@ -87,6 +87,10 @@ func (c Cam) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Ha
 	token := r.Header.Get("token")
 	if token == "" {
 		makeErrResp(w, 401, "token must value")
+		return nil
+	}
+	if !verifyToken(jointURL(r.Host, c.AuthURL), token, url) {
+		makeErrResp(w, 403, "permission denied")
 		return nil
 	}
 	return next.ServeHTTP(w, r)

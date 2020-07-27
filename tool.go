@@ -26,6 +26,28 @@ func makeErrResp(w http.ResponseWriter, code int, message string) {
 		Code:    code,
 		Message: message,
 	}
-	json.NewEncoder(w).Encode(er)
 	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(er)
+}
+
+func jointURL(host, url string) string {
+	return host + url
+}
+
+func verifyToken(authURL string, token string, url string) bool {
+	cli := http.Client{}
+	req, err := http.NewRequest("GET", authURL, nil)
+	if err != nil {
+		return false
+	}
+	req.Header.Add("token", token)
+	req.Header.Add("verify", url)
+	resp, err := cli.Do(req)
+	if err != nil {
+		return false
+	}
+	if resp.StatusCode == 200 {
+		return true
+	}
+	return false
 }

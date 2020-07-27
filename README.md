@@ -24,8 +24,9 @@ order {
 }
 
 :9527 {
-    guard {
-
+    cam {
+        auth_url /mg/users/verify
+        prefix_url /apis/
     }
 
     route /apis/* {
