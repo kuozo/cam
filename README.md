@@ -35,3 +35,9 @@ order {
     }
 }
 ```
+
+4. dev run
+
+```
+xcaddy run --config Caddyfile
+```

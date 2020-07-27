@@ -60,11 +60,15 @@ func (c *Cam) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 				return d.Err("invalid prefix url")
 			}
 			c.PrefixURL = c.splitPrefix(args[0])
-		case "verify_url":
+		case "auth_url":
 			if len(args) != 1 {
 				return d.Err("invalid verify url")
 			}
-			c.AuthURL = args[0]
+			authURL := args[0]
+			if !strings.HasPrefix(authURL, "/") {
+				return d.Err("auth url like /*** format")
+			}
+			c.AuthURL = authURL
 		default:
 			d.Err("Unknow cam parameter: " + parameter)
 		}
