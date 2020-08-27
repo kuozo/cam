@@ -18,9 +18,10 @@ func init() {
 
 // Cam .
 type Cam struct {
-	AuthURL   string   `json:"auth_url,omitempty"`
-	PrefixURL []string `json:"prefix_url,omitempty"`
-	logger    *zap.Logger
+	AuthEndpoint string   `json:"auth_endpoint,omitempty"`
+	PrefixURL    []string `json:"prefix_url,omitempty"`
+	AllowURL     []string `json:"allow_url,omitempty"`
+	logger       *zap.Logger
 }
 
 // CaddyModule caddy module
@@ -60,15 +61,15 @@ func (c *Cam) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 				return d.Err("invalid prefix url")
 			}
 			c.PrefixURL = c.splitPrefix(args[0])
-		case "auth_url":
+		case "auth_endpoint":
 			if len(args) != 1 {
 				return d.Err("invalid verify url")
 			}
-			authURL := args[0]
-			if !strings.HasPrefix(authURL, "/") {
-				return d.Err("auth url like /*** format")
+			AuthEndpoint := args[0]
+			if !strings.HasPrefix(AuthEndpoint, "http://") {
+				return d.Err("auth endpoint like http://** format")
 			}
-			c.AuthURL = authURL
+			c.AuthEndpoint = AuthEndpoint
 		default:
 			d.Err("Unknow cam parameter: " + parameter)
 		}
@@ -93,7 +94,7 @@ func (c Cam) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Ha
 		makeErrResp(w, 401, "token must value")
 		return nil
 	}
-	if !verifyToken(jointURL(r.Host, c.AuthURL), token, url) {
+	if !verifyToken(c.AuthEndpoint, token, url) {
 		makeErrResp(w, 403, "permission denied")
 		return nil
 	}
