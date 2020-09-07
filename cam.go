@@ -91,7 +91,8 @@ func (Cam) splitPrefix(data string) []string {
 func (c Cam) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
 
 	// make sure the url filter
-	url := r.URL.String()
+	url := r.URL.Path
+
 	if include(url, c.AllowURL) {
 		return next.ServeHTTP(w, r)
 	}
