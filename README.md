@@ -25,7 +25,7 @@ order {
 
 :9527 {
     cam {
-        auth_url /mg/users/verify
+        auth_url http://127.0.0.1:8092/auth/verify
         prefix_url /apis/
     }
 

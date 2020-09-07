@@ -2,6 +2,7 @@ package cam
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/caddyserver/caddy/v2"
@@ -70,6 +71,11 @@ func (c *Cam) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 				return d.Err("auth endpoint like http://** format")
 			}
 			c.AuthEndpoint = AuthEndpoint
+		case "allow_url":
+			if len(args) != 1 {
+				return d.Err("invalid allow url")
+			}
+			c.AllowURL = c.splitPrefix(args[0])
 		default:
 			d.Err("Unknow cam parameter: " + parameter)
 		}
@@ -86,6 +92,9 @@ func (c Cam) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Ha
 
 	// make sure the url filter
 	url := r.URL.String()
+	if include(url, c.AllowURL) {
+		return next.ServeHTTP(w, r)
+	}
 	if !include(url, c.PrefixURL) {
 		return next.ServeHTTP(w, r)
 	}
@@ -94,10 +103,14 @@ func (c Cam) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Ha
 		makeErrResp(w, 401, "token must value")
 		return nil
 	}
-	if !verifyToken(c.AuthEndpoint, token, url) {
-		makeErrResp(w, 403, "permission denied")
+	ar := verifyToken(c.AuthEndpoint, token, url)
+	if ar.Code != 200 {
+		makeErrResp(w, ar.Code, ar.Message)
 		return nil
 	}
+	r.Header.Add("x-user-id", strconv.Itoa(ar.Data.ID))
+	r.Header.Add("x-user-type", strconv.Itoa(ar.Data.IsSuper))
+	r.Header.Add("x-user-name", ar.Data.Name)
 	return next.ServeHTTP(w, r)
 }
 
