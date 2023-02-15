@@ -1,8 +1,8 @@
-FROM caddy:2.6.3-builder AS builder
+FROM caddy:2.6.4-builder AS builder
 
 RUN caddy-builder \
     github.com/kuozo/cam@master 
 
-FROM caddy:2.6.3-builder
+FROM caddy:2.6.4-builder
 
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
